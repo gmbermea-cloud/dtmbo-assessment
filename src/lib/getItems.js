@@ -3,7 +3,7 @@ const CACHE_TTL_MS = 5 * 60 * 1000;
 
 // Items are fetched through /api/items (a serverless proxy that reads the
 // Items Google Sheet server-side) so Gabriella can edit item wording without
-// a redeploy, and the read-only Sheets API key never ships to the browser.
+// a redeploy, and the service account credentials never ship to the browser.
 export async function getItems() {
   try {
     const cached = sessionStorage.getItem(CACHE_KEY);

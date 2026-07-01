@@ -19,10 +19,13 @@ This is a separate product from COR3 — not part of that dashboard.
 
 ### 2. Google Cloud credentials
 
-- **Read access (Items):** enable the Sheets API in Google Cloud Console and create an
-  API key. This only needs read access and is used server-side by `/api/items`.
-- **Write access (Responses):** create a service account, enable the Sheets API for it,
-  and share the spreadsheet with the service account's `client_email` as an **Editor**.
+One service account handles both reading `Items` and writing `Responses`:
+
+1. In Google Cloud Console, enable the **Google Sheets API** on a project.
+2. Create a **service account**, then create a JSON key for it (Keys tab → Add Key →
+   Create new key → JSON). This downloads a `.json` file.
+3. Open that file, copy the `client_email` value, and share the spreadsheet with that
+   email as an **Editor**. Without this step both reads and writes will fail.
 
 ### 3. Install and configure env vars
 
@@ -35,9 +38,8 @@ Fill in `.env.local`:
 
 | Variable | Description |
 |---|---|
-| `GOOGLE_SHEETS_API_KEY` | Read-only Sheets API key (server-side only) |
 | `GOOGLE_SHEET_ID` | The spreadsheet ID from the sheet URL |
-| `GOOGLE_SERVICE_ACCOUNT_KEY` | Service account JSON (raw or base64), write access |
+| `GOOGLE_SERVICE_ACCOUNT_KEY` | Full contents of the service account JSON key file (raw or base64) |
 
 ### 4. Run locally
 
@@ -51,8 +53,8 @@ functions — use `vercel dev` locally so the Items fetch and submission flow bo
 ## Deploy to Vercel
 
 1. Push to GitHub and import the repo at [vercel.com/new](https://vercel.com/new).
-2. Add `GOOGLE_SHEETS_API_KEY`, `GOOGLE_SHEET_ID`, and `GOOGLE_SERVICE_ACCOUNT_KEY` as
-   environment variables in the Vercel project settings.
+2. Add `GOOGLE_SHEET_ID` and `GOOGLE_SERVICE_ACCOUNT_KEY` as environment variables in
+   the Vercel project settings.
 3. Deploy.
 
 ## App flow
@@ -87,7 +89,7 @@ src/
     scoring.js              — z-score + Dominant/Secondary blend logic (shared)
     tracks.js               — track names/descriptions/chart colors
   api/
-    items.js                 — GET, proxies the Items sheet read (API key)
+    items.js                 — GET, proxies the Items sheet read (service account)
     submit-response.js       — POST, scores + appends to Responses (service account)
     _lib/items.js, sheetsClient.js, responseSheet.js
 ```

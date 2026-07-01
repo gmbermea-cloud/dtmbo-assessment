@@ -1,22 +1,21 @@
 import { TRACK_ORDER } from '../../src/lib/scoring.js';
+import { getSheetsClient } from './sheetsClient.js';
 
-// Reads the Items tab with the read-only Sheets API key (same key/pattern as
-// the COR3 dashboard). Kept server-side only — the browser never sees this key.
+// Reads the Items tab via the same service account used for writes, so only
+// one credential (GOOGLE_SERVICE_ACCOUNT_KEY) is needed for the whole app.
 export async function fetchItemsFromSheet() {
   const sheetId = process.env.GOOGLE_SHEET_ID;
-  const apiKey = process.env.GOOGLE_SHEETS_API_KEY;
 
-  if (!sheetId || !apiKey) {
-    throw new Error('GOOGLE_SHEET_ID / GOOGLE_SHEETS_API_KEY are not configured');
+  if (!sheetId) {
+    throw new Error('GOOGLE_SHEET_ID is not configured');
   }
 
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/Items!A2:E1000?key=${apiKey}`;
-  const res = await fetch(url);
-  if (!res.ok) {
-    throw new Error(`Failed to fetch Items sheet (${res.status})`);
-  }
-  const data = await res.json();
-  const rows = data.values || [];
+  const sheets = getSheetsClient();
+  const res = await sheets.spreadsheets.values.get({
+    spreadsheetId: sheetId,
+    range: 'Items!A2:E1000',
+  });
+  const rows = res.data.values || [];
 
   const items = rows
     .filter((row) => row[0])
