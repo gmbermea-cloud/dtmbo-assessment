@@ -12,8 +12,8 @@ function loadServiceAccountCredentials() {
 
 let cachedSheetsClient = null;
 
-// Writes use a service account (not the read-only API key) so credentials
-// with write access never leave the server. See build brief Section 6.
+// Single service account, used for both reading Items and writing Responses.
+// Credentials never leave the server. See build brief Section 6.
 export function getSheetsClient() {
   if (cachedSheetsClient) return cachedSheetsClient;
 
