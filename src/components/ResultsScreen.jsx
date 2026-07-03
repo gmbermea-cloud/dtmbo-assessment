@@ -46,6 +46,10 @@ export default function ResultsScreen({ scored }) {
           <TrackBarChart pct={scored.pct} />
         </div>
       </div>
+
+      <p className="mt-10 text-sm font-medium text-red-600">
+        Please forward a screenshot of your result to Gabriella at gmbermea@gmail.com.
+      </p>
     </div>
   );
 }
