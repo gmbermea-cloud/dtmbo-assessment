@@ -38,7 +38,8 @@ export default function TraitAxisQuestionCard({ item, index, total, selectedValu
         <button
           type="button"
           onClick={onBack}
-          className="text-sm font-medium text-navy-700 underline decoration-navy-100 underline-offset-4"
+          disabled={index === 0}
+          className="text-sm font-medium text-navy-700 underline decoration-navy-100 underline-offset-4 disabled:cursor-not-allowed disabled:text-navy-100 disabled:no-underline"
         >
           ← Back
         </button>
