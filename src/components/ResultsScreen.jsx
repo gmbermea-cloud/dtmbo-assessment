@@ -17,7 +17,7 @@ function differentiationHeadline(scored) {
   }
 }
 
-export default function ResultsScreen({ scored }) {
+export default function ResultsScreen({ scored, onContinue }) {
   const dominant = TRACKS[scored.dominant];
   const secondary = TRACKS[scored.secondary];
 
@@ -47,9 +47,13 @@ export default function ResultsScreen({ scored }) {
         </div>
       </div>
 
-      <p className="mt-10 text-sm font-medium text-red-600">
-        Please forward a screenshot of your result to Gabriella at gmbermea@gmail.com.
-      </p>
+      <button
+        type="button"
+        onClick={onContinue}
+        className="mt-10 w-full rounded-md bg-navy-700 px-4 py-3 font-semibold text-white transition-colors hover:bg-navy-800"
+      >
+        Continue to Part 2
+      </button>
     </div>
   );
 }

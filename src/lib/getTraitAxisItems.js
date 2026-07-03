@@ -1,10 +1,9 @@
-const CACHE_KEY = 'dtpbo_items_cache_v1';
+const CACHE_KEY = 'dtpbo_trait_axis_items_cache_v1';
 const CACHE_TTL_MS = 5 * 60 * 1000;
 
-// Items are fetched through /api/items (a serverless proxy that reads the
-// Items Google Sheet server-side) so Gabriella can edit item wording without
-// a redeploy, and the Sheets API key never ships to the browser.
-export async function getItems() {
+// Mirrors getItems.js — fetches through /api/trait-axis-items (a serverless
+// proxy that reads the TraitAxisItems sheet server-side), 5-minute cache.
+export async function getTraitAxisItems() {
   try {
     const cached = sessionStorage.getItem(CACHE_KEY);
     if (cached) {
@@ -17,9 +16,9 @@ export async function getItems() {
     // sessionStorage unavailable or corrupt cache — fall through to a fresh fetch
   }
 
-  const res = await fetch('/api/items');
+  const res = await fetch('/api/trait-axis-items');
   if (!res.ok) {
-    throw new Error('Unable to load the assessment right now. Please try again shortly.');
+    throw new Error('Unable to load part 2 of the assessment right now. Please try again shortly.');
   }
   const items = await res.json();
 
