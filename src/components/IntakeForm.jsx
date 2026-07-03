@@ -24,8 +24,9 @@ export default function IntakeForm({ onBegin }) {
       <p className="mt-4 text-navy-700 leading-relaxed">
         This short assessment looks at your natural inclination across five professional
         tracks — Design, Technical, Project Management, Business Development, and
-        Operations/Finance. There are no right or wrong answers, and it isn&apos;t a measure of
-        skill or experience — just where your energy naturally goes. It takes about 5 minutes.
+        Operations/Finance, plus a short second section on how you naturally approach problems.
+        There are no right or wrong answers, and it isn&apos;t a measure of skill or experience —
+        just where your energy naturally goes. It takes about 7-8 minutes.
       </p>
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-5" noValidate>
