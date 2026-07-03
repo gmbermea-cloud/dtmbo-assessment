@@ -10,11 +10,9 @@ export default function App() {
   const [itemsError, setItemsError] = useState(null);
 
   const [screen, setScreen] = useState('intake'); // intake | questions | results
-  const [respondent, setRespondent] = useState(null); // { name, email }
   const [answers, setAnswers] = useState({});
   const [currentIndex, setCurrentIndex] = useState(0);
   const [scored, setScored] = useState(null);
-  const [saveStatus, setSaveStatus] = useState('idle'); // idle | saving | saved | error
 
   useEffect(() => {
     getItems()
@@ -22,8 +20,7 @@ export default function App() {
       .catch((err) => setItemsError(err.message));
   }, []);
 
-  function handleBegin({ name, email }) {
-    setRespondent({ name, email });
+  function handleBegin() {
     setScreen('questions');
   }
 
@@ -37,37 +34,12 @@ export default function App() {
       return;
     }
 
-    finishAssessment(nextAnswers);
+    setScored(scoreResponses(nextAnswers, items));
+    setScreen('results');
   }
 
   function handleBack() {
     setCurrentIndex((i) => Math.max(0, i - 1));
-  }
-
-  function finishAssessment(finalAnswers) {
-    const result = scoreResponses(finalAnswers, items);
-    setScored(result);
-    setScreen('results');
-    submitResponse(finalAnswers);
-  }
-
-  async function submitResponse(finalAnswers) {
-    setSaveStatus('saving');
-    try {
-      const res = await fetch('/api/submit-response', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: respondent.name,
-          email: respondent.email,
-          answers: finalAnswers,
-        }),
-      });
-      if (!res.ok) throw new Error('Save failed');
-      setSaveStatus('saved');
-    } catch {
-      setSaveStatus('error');
-    }
   }
 
   if (itemsError) {
@@ -105,7 +77,7 @@ export default function App() {
   }
 
   if (screen === 'results') {
-    return <ResultsScreen scored={scored} saveStatus={saveStatus} />;
+    return <ResultsScreen scored={scored} />;
   }
 
   return null;
