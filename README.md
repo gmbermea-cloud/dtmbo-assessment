@@ -11,23 +11,17 @@ This is a separate product from COR3 — not part of that dashboard.
 
 ## Setup
 
-### 1. Google Sheet (editable questions)
-
-1. Create a Google Sheet with a tab named exactly `TraitAxisItems`.
-2. Import the item bank CSV into that tab with columns:
-   `pair_id, axis, axis_name, statement_a, statement_b, a_pole, b_pole`.
-3. In Google Cloud Console, enable the **Google Sheets API** on a project, then create
-   an **API key** (Credentials → Create Credentials → API key). This only needs read
-   access and is used server-side by `/api/trait-axis-items` — it's never exposed to
-   the browser.
-
-### 2. Database (saved responses)
+### 1. Database (saved responses)
 
 In your Vercel project dashboard, go to the **Storage** tab → **Create Database** →
 choose a Postgres option (Neon). Link it to this project. Vercel automatically adds the
 connection string as an environment variable — no manual credentials to copy anywhere.
 
-### 3. Install and configure env vars
+This is the only external dependency the app has. The 16 questions are embedded
+directly in the code (`src/lib/traitAxisItemsData.js`) rather than read from a Google
+Sheet — see "History" below for why.
+
+### 2. Install and configure env vars
 
 ```bash
 npm install
@@ -38,26 +32,32 @@ Fill in `.env.local`:
 
 | Variable | Description |
 |---|---|
-| `GOOGLE_SHEETS_API_KEY` | Read-only Sheets API key (server-side only) |
-| `GOOGLE_SHEET_ID` | The spreadsheet ID from the sheet URL (the part between `/d/` and `/edit`) — must be the spreadsheet that has the `TraitAxisItems` tab |
 | `DATABASE_URL` | Postgres connection string (auto-filled by Vercel once the database is linked; for local dev, run `npx vercel env pull` after linking) |
 
-### 4. Run locally
+### 3. Run locally
 
 ```bash
 npx vercel dev
 ```
 
 Vite alone (`npm run dev`) will serve the frontend but not the `/api` serverless
-functions — use `vercel dev` locally so the item fetch and submission both work.
+function — use `vercel dev` locally so submission works too (the assessment itself
+will run fine either way, since the questions are embedded).
 
 ## Deploy to Vercel
 
 1. Push to GitHub and import the repo at [vercel.com/new](https://vercel.com/new).
 2. Link a Postgres database from the Storage tab (see above).
-3. Add `GOOGLE_SHEETS_API_KEY` and `GOOGLE_SHEET_ID` as environment variables in the
-   Vercel project settings.
-4. Deploy.
+3. Deploy.
+
+## Editing the questions
+
+Edit `src/lib/traitAxisItemsData.js` directly and redeploy — there's no live sheet to
+update. Each entry needs `pair_id`, `axis` (`1` or `2`), `axis_name`, `statement_a`,
+`statement_b`, `a_pole`, and `b_pole`. Order matters: TA1-TA8 must be axis 1
+(Conceptual vs Concrete), TA9-TA16 must be axis 2 (Content vs People) — the scoring
+logic in `src/lib/traitAxisScoring.js` counts A/B picks per axis, so both axes need
+exactly 8 items each.
 
 ## App flow
 
@@ -72,10 +72,9 @@ Intake (name + email) → Questions (16, one per screen) → Result (on-screen, 
   to the previous question; disabled on the first question.
 - After the 16th answer, the result is scored and shown immediately, entirely
   client-side (`src/lib/traitAxisScoring.js`). The raw answers are also POSTed to
-  `/api/submit-response`, which independently re-fetches the item bank, re-runs the same
-  scoring server-side (authoritative — client-computed scores are never trusted), and
-  saves a row to the database. This save is best-effort and doesn't block or delay the
-  on-screen result.
+  `/api/submit-response`, which independently re-runs the same scoring server-side
+  (authoritative — client-computed scores are never trusted) and saves a row to the
+  database. This save is best-effort and doesn't block or delay the on-screen result.
 - The result screen shows the quadrant name, a strength/confidence line, and a 2x2 grid
   with the respondent plotted as a dot. See the comment at the top of
   `TraitAxisResults.jsx` for how the grid's layout was resolved against an internal
@@ -89,6 +88,15 @@ it. That first layer has been retired; this is now the entire assessment. The da
 schema still carries those original columns (nullable, for old rows) but no longer
 writes to them.
 
+The questions were also originally read live from a Google Sheet (so wording could be
+edited without a redeploy), same as Layer 1 had been. That was dropped in favor of
+embedding the 16 items directly in the code: reads kept breaking on sheet/tab
+misconfiguration (wrong spreadsheet ID pointing at the wrong document, tab naming
+mismatches) even after simplifying away from the Google Cloud service-account issues
+documented in earlier commits. For something this short and rarely edited, embedding
+removes an entire class of "why isn't this loading" failures at the cost of needing a
+code change + redeploy to edit wording.
+
 ## Structure
 
 ```
@@ -100,12 +108,12 @@ src/
     TraitAxisQuestionCard.jsx  — two-card forced-choice UI
     TraitAxisResults.jsx        — 2x2 grid result + final screenshot note
   lib/
-    getTraitAxisItems.js        — fetches /api/trait-axis-items, 5-minute session cache
+    getTraitAxisItems.js        — returns the embedded items (async, for a stable API)
+    traitAxisItemsData.js        — the 16 questions themselves
     traitAxisScoring.js          — forced-choice axis + quadrant scoring logic
 api/
-  trait-axis-items.js         — GET, proxies the TraitAxisItems sheet read (API key)
   submit-response.js          — POST, scores + saves a response row (database)
-  _lib/traitAxisItems.js, db.js
+  _lib/db.js
 ```
 
 ## Brand tokens

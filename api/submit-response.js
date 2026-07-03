@@ -1,4 +1,4 @@
-import { fetchTraitAxisItemsFromSheet } from './_lib/traitAxisItems.js';
+import { TRAIT_AXIS_ITEMS } from '../src/lib/traitAxisItemsData.js';
 import { insertResponse } from './_lib/db.js';
 import { scoreTraitAxis } from '../src/lib/traitAxisScoring.js';
 
@@ -27,13 +27,9 @@ export default async function handler(req, res) {
       return;
     }
 
-    // Item list (and the axis mapping used for scoring) is re-fetched from
-    // the sheet rather than trusted from the client.
-    const traitAxisItems = await fetchTraitAxisItemsFromSheet();
-
     const normalizedTraitAxisAnswers = {};
     const invalidPairs = [];
-    for (const item of traitAxisItems) {
+    for (const item of TRAIT_AXIS_ITEMS) {
       const choice = traitAxisAnswers[item.pair_id];
       if (choice !== 'A' && choice !== 'B') {
         invalidPairs.push(item.pair_id);
@@ -49,7 +45,7 @@ export default async function handler(req, res) {
 
     // Scoring is run here from the raw answers — client-computed scores, if any
     // were sent, are never trusted or used.
-    const traitAxisScored = scoreTraitAxis(normalizedTraitAxisAnswers, traitAxisItems);
+    const traitAxisScored = scoreTraitAxis(normalizedTraitAxisAnswers, TRAIT_AXIS_ITEMS);
 
     await insertResponse({
       name: name.trim(),
