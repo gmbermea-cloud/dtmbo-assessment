@@ -17,7 +17,7 @@ function differentiationHeadline(scored) {
   }
 }
 
-export default function ResultsScreen({ scored, saveStatus }) {
+export default function ResultsScreen({ scored }) {
   const dominant = TRACKS[scored.dominant];
   const secondary = TRACKS[scored.secondary];
 
@@ -45,16 +45,6 @@ export default function ResultsScreen({ scored, saveStatus }) {
         <div className="mt-4">
           <TrackBarChart pct={scored.pct} />
         </div>
-      </div>
-
-      <div className="mt-10 text-sm text-navy-500">
-        {saveStatus === 'saving' && <p>Saving your response…</p>}
-        {saveStatus === 'error' && (
-          <p className="text-red-600">
-            We couldn&apos;t save your response automatically. Your result above is still accurate —
-            please let Gabriella know if this keeps happening.
-          </p>
-        )}
       </div>
     </div>
   );
