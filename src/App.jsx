@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import IntakeForm from './components/IntakeForm.jsx';
 import QuestionCard from './components/QuestionCard.jsx';
 import ResultsScreen from './components/ResultsScreen.jsx';
+import FirmDashboard from './components/FirmDashboard.jsx';
 import { getItems } from './lib/getItems.js';
 import { scoreResponses } from './lib/scoring.js';
 
@@ -10,17 +11,22 @@ export default function App() {
   const [itemsError, setItemsError] = useState(null);
 
   const [screen, setScreen] = useState('intake'); // intake | questions | results
+  const [respondent, setRespondent] = useState(null); // { name, email }
   const [answers, setAnswers] = useState({});
   const [currentIndex, setCurrentIndex] = useState(0);
   const [scored, setScored] = useState(null);
 
+  const isFirmPage = window.location.pathname === '/firm';
+
   useEffect(() => {
+    if (isFirmPage) return;
     getItems()
       .then(setItems)
       .catch((err) => setItemsError(err.message));
-  }, []);
+  }, [isFirmPage]);
 
-  function handleBegin() {
+  function handleBegin({ name, email }) {
+    setRespondent({ name, email });
     setScreen('questions');
   }
 
@@ -36,10 +42,32 @@ export default function App() {
 
     setScored(scoreResponses(nextAnswers, items));
     setScreen('results');
+    submitResponse(nextAnswers);
   }
 
   function handleBack() {
     setCurrentIndex((i) => Math.max(0, i - 1));
+  }
+
+  async function submitResponse(finalAnswers) {
+    try {
+      await fetch('/api/submit-response', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: respondent.name,
+          email: respondent.email,
+          answers: finalAnswers,
+        }),
+      });
+    } catch {
+      // Best-effort: the on-screen result already stands on its own even if
+      // this save fails (e.g. offline). Nothing for the respondent to act on.
+    }
+  }
+
+  if (isFirmPage) {
+    return <FirmDashboard />;
   }
 
   if (itemsError) {
