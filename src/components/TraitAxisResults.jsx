@@ -15,7 +15,7 @@ export default function TraitAxisResults({ scored }) {
 
   return (
     <div className="mx-auto max-w-2xl px-6 py-16">
-      <p className="text-sm font-semibold uppercase tracking-wide text-gold-600">Part 2 result</p>
+      <p className="text-sm font-semibold uppercase tracking-wide text-gold-600">Your result</p>
       <h1 className="mt-2 text-3xl font-bold text-navy-900">{scored.quadrantLean}</h1>
       <p className="mt-3 text-navy-700 leading-relaxed">{scored.headline}</p>
 

@@ -1,7 +1,5 @@
-import { fetchItemsFromSheet } from './_lib/items.js';
 import { fetchTraitAxisItemsFromSheet } from './_lib/traitAxisItems.js';
 import { insertResponse } from './_lib/db.js';
-import { scoreResponses } from '../src/lib/scoring.js';
 import { scoreTraitAxis } from '../src/lib/traitAxisScoring.js';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -14,7 +12,7 @@ export default async function handler(req, res) {
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body ?? {};
-    const { name, email, answers, traitAxisAnswers } = body;
+    const { name, email, traitAxisAnswers } = body;
 
     if (typeof name !== 'string' || name.trim().length === 0) {
       res.status(400).json({ error: 'Name is required' });
@@ -24,37 +22,14 @@ export default async function handler(req, res) {
       res.status(400).json({ error: 'A valid email is required' });
       return;
     }
-    if (!answers || typeof answers !== 'object') {
+    if (!traitAxisAnswers || typeof traitAxisAnswers !== 'object') {
       res.status(400).json({ error: 'Answers are required' });
       return;
     }
-    if (!traitAxisAnswers || typeof traitAxisAnswers !== 'object') {
-      res.status(400).json({ error: 'Part 2 answers are required' });
-      return;
-    }
 
-    // Item lists (and the mappings used for scoring) are re-fetched from the
-    // sheets rather than trusted from the client.
-    const [items, traitAxisItems] = await Promise.all([
-      fetchItemsFromSheet(),
-      fetchTraitAxisItemsFromSheet(),
-    ]);
-
-    const normalizedAnswers = {};
-    const invalidItems = [];
-    for (const item of items) {
-      const raw = Number(answers[item.item_id]);
-      if (![1, 2, 3, 4].includes(raw)) {
-        invalidItems.push(item.item_id);
-        continue;
-      }
-      normalizedAnswers[item.item_id] = raw;
-    }
-
-    if (invalidItems.length > 0) {
-      res.status(400).json({ error: `Missing or invalid answers for ${invalidItems.length} item(s)` });
-      return;
-    }
+    // Item list (and the axis mapping used for scoring) is re-fetched from
+    // the sheet rather than trusted from the client.
+    const traitAxisItems = await fetchTraitAxisItemsFromSheet();
 
     const normalizedTraitAxisAnswers = {};
     const invalidPairs = [];
@@ -68,20 +43,17 @@ export default async function handler(req, res) {
     }
 
     if (invalidPairs.length > 0) {
-      res.status(400).json({ error: `Missing or invalid answers for ${invalidPairs.length} part 2 pair(s)` });
+      res.status(400).json({ error: `Missing or invalid answers for ${invalidPairs.length} pair(s)` });
       return;
     }
 
     // Scoring is run here from the raw answers — client-computed scores, if any
     // were sent, are never trusted or used.
-    const scored = scoreResponses(normalizedAnswers, items);
     const traitAxisScored = scoreTraitAxis(normalizedTraitAxisAnswers, traitAxisItems);
 
     await insertResponse({
       name: name.trim(),
       email: email.trim(),
-      answers: normalizedAnswers,
-      scored,
       traitAxisAnswers: normalizedTraitAxisAnswers,
       traitAxisScored,
     });

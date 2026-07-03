@@ -22,11 +22,9 @@ export default function IntakeForm({ onBegin }) {
     <div className="mx-auto max-w-xl px-6 py-16">
       <h1 className="text-3xl font-bold text-navy-800">DTPBO Career Inclination Assessment</h1>
       <p className="mt-4 text-navy-700 leading-relaxed">
-        This short assessment looks at your natural inclination across five professional
-        tracks — Design, Technical, Project Management, Business Development, and
-        Operations/Finance, plus a short second section on how you naturally approach problems.
-        There are no right or wrong answers, and it isn&apos;t a measure of skill or experience —
-        just where your energy naturally goes. It takes about 7-8 minutes.
+        16 quick either/or choices about how you naturally approach problems — no right or
+        wrong answers, and not a measure of skill or experience, just where your instincts
+        lean. It takes about 2 minutes.
       </p>
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-5" noValidate>

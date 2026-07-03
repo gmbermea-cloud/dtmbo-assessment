@@ -1,8 +1,9 @@
 const CACHE_KEY = 'dtpbo_trait_axis_items_cache_v1';
 const CACHE_TTL_MS = 5 * 60 * 1000;
 
-// Mirrors getItems.js — fetches through /api/trait-axis-items (a serverless
-// proxy that reads the TraitAxisItems sheet server-side), 5-minute cache.
+// Fetches through /api/trait-axis-items (a serverless proxy that reads the
+// TraitAxisItems sheet server-side) so Gabriella can edit item wording
+// without a redeploy, with a 5-minute session cache.
 export async function getTraitAxisItems() {
   try {
     const cached = sessionStorage.getItem(CACHE_KEY);
@@ -18,7 +19,7 @@ export async function getTraitAxisItems() {
 
   const res = await fetch('/api/trait-axis-items');
   if (!res.ok) {
-    throw new Error('Unable to load part 2 of the assessment right now. Please try again shortly.');
+    throw new Error('Unable to load the assessment right now. Please try again shortly.');
   }
   const items = await res.json();
 
